@@ -1,0 +1,6 @@
+defaults:
+  - _self_
+_target_: datasets.load_dataset
+path: ???
+keep_in_memory: true
+trust_remote_code: true

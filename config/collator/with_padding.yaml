@@ -1,0 +1,2 @@
+_target_: transformers.DataCollatorWithPadding
+padding: "max_length"

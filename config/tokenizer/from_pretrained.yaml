@@ -1,0 +1,5 @@
+defaults:
+  - _self_
+_target_: transformers.AutoTokenizer.from_pretrained
+model_length: 512
+pretrained_model_name_or_path: ???

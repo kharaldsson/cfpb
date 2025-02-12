@@ -1,0 +1,28 @@
+defaults:
+  - data: cfpb-csv #cfpb-json-toy
+  - _self_
+
+dataset_name: cfpb-txt-only
+ 
+label_field: "Company response to consumer"
+text_field: "Consumer complaint narrative"
+label_field_allowed_values:
+  - "Closed with explanation"
+  - "Closed with non-monetary relief"
+  - "Closed with monetary relief"
+
+splits:
+  train: 0.8
+  valid: 0.1
+  test: 0.1
+
+random_state: 312
+
+# dataset:
+#   path: ${data.path}
+
+hydra:
+  job:
+    name: process_data
+  run:
+    dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}

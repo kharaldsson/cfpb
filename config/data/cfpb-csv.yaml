@@ -1,0 +1,4 @@
+defaults:
+  - cfpb-local
+path: ${data.base_dir}/complaints.${data.type}
+type: csv

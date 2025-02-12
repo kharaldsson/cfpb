@@ -1,0 +1,51 @@
+defaults:
+  - data: cfpb-hf
+  - dataset: load_dataset
+  - collator: with_padding
+  - tokenizer: from_pretrained
+  - training_args: base
+  - model: from_pretrained
+  - _self_
+
+model_id: microsoft/deberta-v3-base
+seed: 42
+
+
+label_field: "Company Response To Consumer"
+text_field: "Complaint Text"
+train_split: "train"
+eval_split: "valid"
+
+dataset:
+  path: ${data.path}
+  # features:
+
+collator:
+  max_length: ${tokenizer.model_length}
+
+model:
+  pretrained_model_name_or_path: ${model_id}
+tokenizer:
+  pretrained_model_name_or_path: ${model_id}  
+training_args:
+  seed: ${seed}
+  save_steps: 1000
+  eval_steps: 1000
+  logging_steps: 100
+  log_level: info
+  dataloader_num_workers: 8
+use_iterable_dataset: true
+trainer:
+  _target_: transformers.Trainer
+  args: ${training_args}
+  model: ${model}
+  tokenizer: ${tokenizer}
+  callbacks:
+    - _target_: transformers.EarlyStoppingCallback
+      early_stopping_patience: 5
+
+hydra:
+  job:
+    name: transcr
+  run:
+    dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
