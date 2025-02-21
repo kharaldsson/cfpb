@@ -1,24 +1,23 @@
 defaults:
-  - data: cfpb-hf
-  - dataset: load_dataset
+  - data: cfpb-hf-ds
+  - dataset: load_from_disk
   - collator: with_padding
   - tokenizer: from_pretrained
   - training_args: base
   - model: from_pretrained
   - _self_
 
-model_id: microsoft/deberta-v3-base
+model_id: answerdotai/ModernBERT-base # microsoft/deberta-v3-base # 
 seed: 42
 
 
-label_field: "Company Response To Consumer"
-text_field: "Complaint Text"
+label_field: "label"
+text_field: "text"
 train_split: "train"
 eval_split: "valid"
 
 dataset:
-  path: ${data.path}
-  # features:
+  dataset_path: ${data.path}
 
 collator:
   max_length: ${tokenizer.model_length}
@@ -31,21 +30,29 @@ training_args:
   seed: ${seed}
   save_steps: 1000
   eval_steps: 1000
+  # eval_strategy: epoch
+  # save_strategy: epoch
   logging_steps: 100
   log_level: info
-  dataloader_num_workers: 8
+  # dataloader_num_workers: 8
+  learning_rate: 0.00002
+  weight_decay: 0.002
+  num_train_epochs: 3
+  per_device_train_batch_size: 32
+  per_device_eval_batch_size: 32
+  save_total_limit: 2
+  use_mps_device: true
+  warmup_steps: 300
 use_iterable_dataset: true
 trainer:
   _target_: transformers.Trainer
   args: ${training_args}
-  model: ${model}
-  tokenizer: ${tokenizer}
   callbacks:
     - _target_: transformers.EarlyStoppingCallback
-      early_stopping_patience: 5
+      early_stopping_patience: 3
 
 hydra:
   job:
-    name: transcr
+    name: train
   run:
     dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}

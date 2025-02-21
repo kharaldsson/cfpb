@@ -1,0 +1,17 @@
+defaults:
+  - train
+  - override data: cfpb-hf-ds-tiny
+  - _self_
+
+
+
+training_args:
+  save_steps: 100
+  eval_steps: 100
+  logging_steps: 10
+  log_level: info
+  learning_rate: 0.00002
+  weight_decay: 0.002
+  num_train_epochs: 3
+  per_device_train_batch_size: 32
+  per_device_eval_batch_size: 32
