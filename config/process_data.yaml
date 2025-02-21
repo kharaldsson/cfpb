@@ -2,7 +2,7 @@ defaults:
   - data: cfpb-csv #cfpb-json-toy
   - _self_
 
-dataset_name: cfpb-txt-only
+dataset_name: cfpb-txt-only-medium
  
 label_field: "Company response to consumer"
 text_field: "Consumer complaint narrative"

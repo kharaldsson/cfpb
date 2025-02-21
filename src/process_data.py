@@ -13,11 +13,6 @@ from omegaconf import DictConfig, OmegaConf, open_dict
 
 import torch
 
-# from transformers import (
-#     AutoModel
-#     pipeline
-# )
-
 from datasets import (
     load_dataset,
     DatasetDict,
@@ -52,7 +47,7 @@ def process(cfg: DictConfig) -> None:
         data = pd.read_csv(
             cfg.data.path,
             dtype={cfg.label_field: str, cfg.text_field: str},
-            # nrows=1000 # TODO remove nrows
+            nrows=1000000 # TODO remove nrows
             ) 
     else:
         raise ValueError(f"Unspoorted data type: {cfg.data.dype}")
@@ -73,7 +68,7 @@ def process(cfg: DictConfig) -> None:
         columns={cfg.text_field: "text", cfg.label_field: "label"}
         ).copy()
 
-    data = data.reset_index(drop=True)  # Drop the index to avoid __index_level_0__
+    data = data.reset_index(drop=True)
 
     # Define Features
     features = Features({
@@ -88,32 +83,29 @@ def process(cfg: DictConfig) -> None:
     split_percentages = cfg.splits 
     assert sum(split_percentages.values()) == 1.0, "Split percentages must sum to 1.0"
 
-    # Shuffle and split
-    hf_dataset = hf_dataset.shuffle(seed=cfg.random_state)
-    split_dict = {
-        "train": int(len(hf_dataset) * split_percentages["train"]),
-        "valid": int(len(hf_dataset) * split_percentages["valid"])
-    }
-    split_dict["test"] = len(hf_dataset) - sum(split_dict.values())
+    # Compute absolute sizes for splits
+    total_len = len(hf_dataset)
+    test_size = int(total_len * split_percentages["test"])
+    valid_size = int(total_len * split_percentages["valid"])
 
-    hf_dataset = hf_dataset.train_test_split(
-        test_size=split_dict["test"] / len(hf_dataset), seed=cfg.random_state
-    )
-    valid_test = hf_dataset["test"].train_test_split(
-        test_size=split_dict["valid"] / (split_dict["valid"] + split_dict["train"]), seed=cfg.random_state
-    )
-    hf_dataset["valid"] = valid_test["test"]
-    hf_dataset["test"] = valid_test["train"]
+    # Perform splits
+    dataset_splits = hf_dataset.train_test_split(test_size=test_size, seed=cfg.random_state)
+    train_valid_dataset = dataset_splits["train"].train_test_split(test_size=valid_size, seed=cfg.random_state)
+
+    # Create a DatasetDict
+    dataset_dict = DatasetDict({
+        "train": train_valid_dataset["train"],
+        "valid": train_valid_dataset["test"],
+        "test": dataset_splits["test"]
+    })
+
+    log.info(f"Dataset: {dataset_dict}")
 
     # Save the dataset
     output_dir = os.path.join(cfg.data.base_dir, cfg.dataset_name)
     os.makedirs(output_dir, exist_ok=True)
-    hf_dataset.save_to_disk(output_dir)
+    dataset_dict.save_to_disk(output_dir)
     log.info(f"Dataset saved to {output_dir}")
-
-    # Log dataset splits
-    for split in hf_dataset.keys():
-        log.info(f"{split} split: {len(hf_dataset[split])} examples")
 
 
 if __name__ == "__main__":
