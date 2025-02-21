@@ -1,0 +1,39 @@
+defaults:
+  - data: cfpb-hf-ds-medium
+  - dataset: load_from_disk
+  - pipeline: text-classification
+  - tokenizer: from_pretrained
+  - model: from_pretrained
+  - _self_
+
+# Path to the locally saved model (update as needed)
+saved_model_path: "outputs/train/2025-02-19_16-37-07/checkpoints/checkpoint-5500" #"outputs/train/2025-02-13_08-49-44/checkpoints"
+
+batch_size: 64
+
+# Fields in the dataset
+text_field: text
+label_field: label
+prediction_field: prediction
+prediction_desc_field: prediction_desc
+test_split: test
+predictions_fname: predictions
+
+dataset:
+  # Path to the dataset on disk
+  dataset_path: ${data.path}
+
+data:
+  is_tokenized: false
+
+model:
+  pretrained_model_name_or_path: ${saved_model_path}
+tokenizer:
+  pretrained_model_name_or_path: ${saved_model_path}  
+
+
+hydra:
+  job:
+    name: infer
+  run:
+    dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}

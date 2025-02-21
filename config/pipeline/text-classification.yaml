@@ -1,0 +1,5 @@
+defaults:
+  - _self_
+_target_: transformers.pipeline
+task: "text-classification"
+model: ???
